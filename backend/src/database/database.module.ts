@@ -9,7 +9,7 @@ export class Database implements OnApplicationShutdown {
   constructor() {
     const connectionString = process.env.DATABASE_URL;
     if (!connectionString) throw new Error('Set DATABASE_URL in backend/.env before starting the API.');
-    this.pool = new Pool({ connectionString, max: 5, connectionTimeoutMillis: 5000, idleTimeoutMillis: 30000 });
+    this.pool = new Pool({ connectionString, max: 5, connectionTimeoutMillis: 10000, idleTimeoutMillis: 30000, statement_timeout: 10000 });
     // Idle clients can fail independently of a request; never log the connection string.
     this.pool.on('error', () => this.logger.error('An idle database connection failed.'));
   }

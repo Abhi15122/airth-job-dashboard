@@ -55,4 +55,19 @@ describe('Create/list HTTP contract (mock database)', () => {
     expect(query.mock.calls[0][0]).not.toContain(title);
     expect(query.mock.calls[0][1][1]).toBe(title);
   });
+
+  it('reports unhealthy database without leaking error details', async () => {
+    query.mockRejectedValue(new Error('private database connection details'));
+    const response = await request(app.getHttpServer()).get('/health').expect(503);
+    expect(response.body.message).toBe('Database is unavailable.');
+    expect(JSON.stringify(response.body)).not.toContain('private');
+  });
+
+  it('hides unexpected SQL failures from the API response', async () => {
+    app.useLogger(false);
+    query.mockRejectedValue(new Error('secret SQL failure'));
+    const response = await request(app.getHttpServer()).get('/jobs').expect(500);
+    expect(response.body.message).toContain('could not complete');
+    expect(JSON.stringify(response.body)).not.toContain('secret');
+  });
 });

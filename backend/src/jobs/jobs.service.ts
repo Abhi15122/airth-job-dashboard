@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { Database } from '../database/database.module';
 import { CreateJobDto } from './dto/create-job.dto';
-import { Job } from './job';
+import { Job, JobStatus } from './job';
 
 type JobRow = Omit<Job, 'createdAt'> & { createdAt: Date };
 const columns = 'id, title, type, status, created_at AS "createdAt"';
@@ -25,5 +25,25 @@ export class JobsService {
       `SELECT ${columns} FROM jobs ORDER BY created_at DESC, id DESC`,
     );
     return result.rows.map(serialize);
+  }
+
+  async updateStatus(id: string, status: JobStatus): Promise<Job> {
+    // PostgreSQL locks the row and rechecks this predicate after a concurrent update.
+    // Only one competing transition out of the same state can succeed.
+    const result = await this.database.pool.query<JobRow>(
+      `UPDATE jobs SET status = $2 WHERE id = $1 AND (
+        (status = 'pending' AND $2 = 'running') OR
+        (status = 'running' AND $2 IN ('completed', 'failed'))
+      ) RETURNING ${columns}`, [id, status],
+    );
+    if (result.rows[0]) return serialize(result.rows[0]);
+    const existing = await this.database.pool.query('SELECT id FROM jobs WHERE id = $1', [id]);
+    if (!existing.rowCount) throw new NotFoundException('Job not found.');
+    throw new ConflictException('Invalid status transition. Refresh the list; another request may have changed this job.');
+  }
+
+  async delete(id: string): Promise<void> {
+    const result = await this.database.pool.query('DELETE FROM jobs WHERE id = $1', [id]);
+    if (!result.rowCount) throw new NotFoundException('Job not found.');
   }
 }

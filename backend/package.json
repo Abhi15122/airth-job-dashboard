@@ -11,7 +11,7 @@
     "start": "node --env-file-if-exists=.env dist/main.js",
     "migrate": "node --env-file-if-exists=.env scripts/migrate.cjs",
     "test": "jest --runInBand",
-    "test:integration": "node --env-file=.env node_modules/jest/bin/jest.js --runInBand --config jest.integration.config.cjs"
+    "test:integration": "node scripts/test-integration.cjs"
   },
   "dependencies": {
     "@nestjs/common": "11.2.5",
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "11.2.5",
+    "@types/express": "5.0.6",
     "@types/jest": "30.0.0",
     "@types/node": "22.20.2",
     "@types/pg": "8.23.1",
