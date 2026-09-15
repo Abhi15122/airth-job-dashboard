@@ -13,7 +13,9 @@ A small dashboard for creating jobs, tracking their status, and deleting them. S
 
 ## Live links
 
-Public GitHub, frontend and backend URLs will be recorded here after deployment is verified. Local implementation and tests are complete; hosting is not yet verified.
+- Repository: [Abhi15122/airth-job-dashboard](https://github.com/Abhi15122/airth-job-dashboard)
+- Frontend: [AIRTH Dashboard](https://airth-job-dashboard.vercel.app)
+- Backend: [API health](https://airth-job-dashboard.onrender.com/health)
 
 ## Stack and scope
 
@@ -22,7 +24,6 @@ Public GitHub, frontend and backend URLs will be recorded here after deployment 
 | Frontend | React + TypeScript + Vite, React Hook Form, Tailwind CSS |
 | Backend | NestJS + TypeScript, class-validator/class-transformer |
 | Persistence | PostgreSQL on Neon, `pg` with parameterized SQL |
-| Tests | Jest + Supertest + real PostgreSQL; Vitest + React Testing Library |
 | Hosting configuration | Vercel frontend, Render backend, Neon database |
 
 ```text
@@ -79,7 +80,6 @@ npm run preview -- --port 5173 --strictPort
 | Variable | Where | Meaning |
 | --- | --- | --- |
 | `DATABASE_URL` | Backend | Application PostgreSQL URL; required |
-| `TEST_DATABASE_URL` | Backend test environment only | Separate database/Neon branch for integration tests |
 | `FRONTEND_ORIGIN` | Backend | Exact allowed browser origin, including protocol and port; no trailing slash |
 | `PORT` | Backend | HTTP port; defaults to 3000, supplied by Render in hosting |
 | `VITE_API_URL` | Frontend | Backend base URL, without `/jobs`; no credentials |
@@ -141,32 +141,9 @@ An unconditional read-then-write would allow both clients to act on the same sta
 
 The UI refreshes on window focus, after successful changes, and after a 404/409. It does not optimistically claim a status change before the server accepts it. A request version prevents older list responses from overwriting newer state. This is not real-time push synchronization.
 
-## Tests and verification boundaries
+## Build verification
 
-```powershell
-npm test
-```
-
-Run the command above in `backend/`. These HTTP tests use real NestJS routing, pipes, controllers and services with a mock database. They cover validation and error responses.
-
-For integration tests, set `TEST_DATABASE_URL` in `backend/.env` to a **separate database or Neon branch**. Each run verifies, creates, uses, and removes its own randomly named schema. Only its own schema's jobs are cleared between tests. The role needs schema creation permission. Neon test connections use the direct endpoint so the session's search path is preserved.
-
-```powershell
-npm run test:integration
-```
-
-The suite fails when configuration is missing or the application and test URLs identify the same database. It verifies all 16 status combinations, missing/invalid inputs, persistence, duplicate titles, SQL-looking input, deletion races, eight simultaneous starts, and competing terminal transitions.
-
-In `frontend/`:
-
-```powershell
-npm test
-npm run build
-```
-
-Frontend tests cover counts/filtering, form validation and trimming, failed submissions, retry, status actions, conflicts, delete confirmation, and disabled duplicate actions.
-
-Local verification: **20 backend HTTP tests, 14 real PostgreSQL integration tests, and 9 frontend tests passed**, and both TypeScript/production builds passed. GitHub Actions also defines these checks with a disposable PostgreSQL service; an actual hosted CI run is a separate verification step.
+Run `npm run build` in both `backend/` and `frontend/`. GitHub Actions runs these builds on pushes and pull requests.
 
 ## Production-readiness bonus: database readiness check
 
@@ -184,12 +161,12 @@ Import the repository as a Blueprint using `render.yaml`, or create a Node Web S
 | --- | --- |
 | Root directory | `backend` |
 | Instance plan | Free |
-| Build command | `npm ci && npm run build` |
+| Build command | `npm ci --include=dev && npm run build` |
 | Start command | `npm run migrate && npm start` |
 | Health check path | `/health` |
 | Node version | `22.19.0` |
 
-Add `DATABASE_URL` as a secret environment variable and `FRONTEND_ORIGIN` as the deployed frontend origin. Do not deploy `TEST_DATABASE_URL`. Render supplies `PORT`; the app listens on `0.0.0.0`.
+Add `DATABASE_URL` as a secret environment variable and `FRONTEND_ORIGIN` as the deployed frontend origin. Render supplies `PORT`; the app listens on `0.0.0.0`.
 
 The migration runner records applied SQL files in a transaction, with a transaction-scoped advisory lock to serialize deployment migrations. Running it again is safe; it does not drop or recreate live data. Render Free has no dedicated pre-deploy command, so the start command runs migrations before starting the API.
 

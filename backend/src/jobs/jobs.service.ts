@@ -28,8 +28,6 @@ export class JobsService {
   }
 
   async updateStatus(id: string, status: JobStatus): Promise<Job> {
-    // PostgreSQL locks the row and rechecks this predicate after a concurrent update.
-    // Only one competing transition out of the same state can succeed.
     const result = await this.database.pool.query<JobRow>(
       `UPDATE jobs SET status = $2 WHERE id = $1 AND (
         (status = 'pending' AND $2 = 'running') OR

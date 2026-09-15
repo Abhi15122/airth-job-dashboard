@@ -12,7 +12,6 @@ export class HttpErrorFilter implements ExceptionFilter {
       response.status(error.getStatus()).json(typeof body === 'string' ? { statusCode: error.getStatus(), message: body } : body);
       return;
     }
-    // Never return/log SQL text, connection URLs or submitted values.
     this.logger.error('Unhandled request failure.');
     response.status(500).json({ statusCode: 500, message: 'The server could not complete the request. Please try again.' });
   }

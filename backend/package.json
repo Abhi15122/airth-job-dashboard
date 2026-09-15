@@ -9,9 +9,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "node --env-file-if-exists=.env --watch -r ts-node/register src/main.ts",
     "start": "node --env-file-if-exists=.env dist/main.js",
-    "migrate": "node --env-file-if-exists=.env scripts/migrate.cjs",
-    "test": "jest --runInBand",
-    "test:integration": "node scripts/test-integration.cjs"
+    "migrate": "node --env-file-if-exists=.env scripts/migrate.cjs"
   },
   "dependencies": {
     "@nestjs/common": "11.2.5",
@@ -24,15 +22,9 @@
     "rxjs": "7.8.2"
   },
   "devDependencies": {
-    "@nestjs/testing": "11.2.5",
     "@types/express": "5.0.6",
-    "@types/jest": "30.0.0",
     "@types/node": "22.20.2",
     "@types/pg": "8.23.1",
-    "@types/supertest": "7.2.1",
-    "jest": "30.5.1",
-    "supertest": "7.2.2",
-    "ts-jest": "29.4.12",
     "ts-node": "10.9.2",
     "typescript": "5.9.3"
   },

@@ -23,7 +23,7 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
       const body = await response.json();
       if (Array.isArray(body.message)) message = body.message.join(' ');
       else if (typeof body.message === 'string') message = body.message;
-    } catch { /* A proxy may return an HTML error. */ }
+    } catch {}
     throw new ApiError(message, response.status);
   }
   if (response.status === 204) return undefined as T;

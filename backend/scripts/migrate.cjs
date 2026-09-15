@@ -9,7 +9,6 @@ async function migrate() {
   try {
     client = await pool.connect();
     await client.query('BEGIN');
-    // Serialize concurrent deploy migrations inside this transaction.
     await client.query('SELECT pg_advisory_xact_lock(741802)');
     await client.query('CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
     const dir = path.join(__dirname, '..', 'migrations');
